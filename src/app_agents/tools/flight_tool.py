@@ -1,7 +1,7 @@
 from langchain.tools import tool
 import json
 
-from app_agents.mcp.EnuygunMCP import EnuygunMCP
+from app_agents.mcp_tools.EnuygunMCP import EnuygunMCP
 
 
 def create_flight_search_tool(mcp: EnuygunMCP):
@@ -56,7 +56,7 @@ def create_flight_search_tool(mcp: EnuygunMCP):
             "direct_flight": direct_flight,
         }
 
-        response = await mcp.call_tool(input_data)
+        response = await mcp.call_tool("flight_search", input_data)
         payload = extract_mcp_payload(response)
 
         return compact_flight_response(payload)
@@ -65,21 +65,33 @@ def create_flight_search_tool(mcp: EnuygunMCP):
 
 
 def extract_mcp_payload(response) -> dict:
-    if hasattr(response, "content") and response.content:
+    if isinstance(response, list) and response:
+        first_item = response[0]
+        if isinstance(first_item, dict) and "text" in first_item:
+            payload = json.loads(first_item["text"])
+        else:
+            raise ValueError(f"Unexpected list item format: {first_item!r}")
+
+    elif isinstance(response, dict):
+        payload = response
+
+    elif isinstance(response, str):
+        payload = json.loads(response)
+
+    elif hasattr(response, "content") and response.content:
         first_content = response.content[0]
         raw_text = getattr(first_content, "text", None)
-        if raw_text:
-            payload = json.loads(raw_text)
-            if not payload.get("success", True):
-                raise ValueError(payload.get("error", "MCP tool returned an error."))
-            # ✅ DÜZELTME 1: Sadece "flights" değil, tüm "data" nesnesini dönüyoruz
-            return payload["data"]
+        if not raw_text:
+            raise ValueError("In MCP tool response, first content item has no 'text' attribute.")
+        payload = json.loads(raw_text)
 
-    if isinstance(response, dict):
-        return response
+    else:
+        raise ValueError(f"Unexpected MCP tool response format: {type(response)} — {response!r}")
 
-    raise ValueError("Unexpected MCP tool response format.")
+    if not payload.get("success", True):
+        raise ValueError(payload.get("error", "MCP tool returned an error."))
 
+    return payload["data"]
 
 def compact_flight_response(data: dict) -> dict:
     flights = []

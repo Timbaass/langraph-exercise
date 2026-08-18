@@ -19,7 +19,7 @@ class TripGuardrailMiddleware(AgentMiddleware):
         )
 
     @hook_config(can_jump_to=["end"])
-    def before_agent(self, state: AgentState, runtime: Runtime):
+    async def before_agent(self, state: AgentState, runtime: Runtime):
         if not state["messages"]:
             return None
 
@@ -28,7 +28,7 @@ class TripGuardrailMiddleware(AgentMiddleware):
             return None
 
         try:
-            control_response = self.control_model.invoke(
+            control_response = await self.control_model.ainvoke(
                 [
                     SystemMessage(
                         "Classify whether the user request is about travel or weather "

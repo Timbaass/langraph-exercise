@@ -1,17 +1,20 @@
 from langchain.agents import create_agent
-
-from app_agents.tools.weather_tool import get_weather
-from app_agents.guardrails.trip_guardrail_middleware import TripGuardrailMiddleware
-
 from langchain_groq import ChatGroq
 
+from app_agents.tools.weather_tool import get_weather
 
-def create_trip_agent(model: ChatGroq):
+from config import get_settings
+
+
+def create_trip_agent():
+    """Creates a trip agent."""
+
+    model = ChatGroq(model="openai/gpt-oss-120b", api_key=get_settings().GROQ_API_KEY)
 
     trip_agent = create_agent(
         model=model,
         tools=[get_weather],
-        middleware=[TripGuardrailMiddleware()],
+        system_prompt="You are a trip agent that helps users plan trips based on their needs. Use the weather tool if needed to check conditions and provide recommendations.",
     )
 
     return trip_agent

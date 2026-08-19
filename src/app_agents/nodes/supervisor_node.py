@@ -17,11 +17,14 @@ async def supervisor_node(state: TripState):
         RoutingDecision
     ).ainvoke([
         SystemMessage(
-            content="You are a supervisor agent that decides whether to route the "
-            "user to the trip agent or the flight agent based on the user's messages. "
-            "If the user provides ambiguous or incomplete information, set decision to 'clarify'."
+            content="You are a silent routing supervisor. You must NOT respond to the user. "
+            "Your ONLY job is to analyze the conversation and route the request to the correct agent. "
+            "Route to 'trip' for trip planning/weather, 'flight' for flight booking/searching, or 'clarify' if ambiguous."
         ),
         *state["messages"],
+        SystemMessage(
+            content="Do not respond to the user. Call the RoutingDecision tool to select 'flight', 'trip', or 'clarify'."
+        )
     ])
 
     if result.decision == "trip":

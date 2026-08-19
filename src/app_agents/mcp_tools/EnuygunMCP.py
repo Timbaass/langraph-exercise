@@ -1,10 +1,12 @@
+from config import get_settings
 from langchain_mcp_adapters.client import MultiServerMCPClient
 
 
 class EnuygunMCP:
     def __init__(self):
+        self.settings = get_settings()
         self.client = MultiServerMCPClient(
-            {"enuygun": {"url": "https://mcp.enuygun.com/mcp", "transport": "http"}}
+            {"enuygun": {"url": self.settings.ENUYGUN_MCP_URL, "transport": "http"}}
         )
         self.tools = None
 

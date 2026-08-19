@@ -1,9 +1,7 @@
 from langchain.agents.middleware import AgentMiddleware, AgentState, hook_config
-from langchain.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 from langchain_groq import ChatGroq
-
-from langgraph.runtime import Runtime
 
 from config import get_settings
 
@@ -19,12 +17,15 @@ class TripGuardrailMiddleware(AgentMiddleware):
         )
 
     @hook_config(can_jump_to=["end"])
-    async def before_agent(self, state: AgentState, runtime: Runtime):
+    async def before_agent(self, state: AgentState, runtime):
         if not state["messages"]:
             return None
 
-        first_message = state["messages"][0]
-        if not isinstance(first_message, HumanMessage):
+        last_human_message = next(
+            (m for m in reversed(state["messages"]) if isinstance(m, HumanMessage)),
+            None,
+        )
+        if last_human_message is None:
             return None
 
         try:
@@ -34,7 +35,7 @@ class TripGuardrailMiddleware(AgentMiddleware):
                         "Classify whether the user request is about travel or weather "
                         "information. Respond with exactly one word: 'continue' or 'end'."
                     ),
-                    HumanMessage(first_message.content),
+                    HumanMessage(last_human_message.content),
                 ]
             )
         except Exception:
@@ -45,7 +46,7 @@ class TripGuardrailMiddleware(AgentMiddleware):
             return {
                 "jump_to": "end",
                 "messages": [
-                    AIMessage("I can only help with travel and weather questions.")
+                    AIMessage("I can only help with trip and flight questions.")
                 ],
             }
 

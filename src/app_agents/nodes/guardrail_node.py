@@ -6,5 +6,5 @@ _guardrail = TripGuardrailMiddleware()
 async def guardrail_node(state: TripState):
     result = await _guardrail.before_agent(state, None)
     if result is None:
-        return {}
+        return {"blocked": False}
     return {"blocked": True, "messages": result["messages"]}

@@ -30,7 +30,7 @@ graph_builder.add_edge("flight_node", END)
 graph_builder.add_edge("clarify_node", END)
 
 checkpointer = InMemorySaver()
-graph = graph_builder.compile(checkpointer=checkpointer)
+graph = graph_builder.compile()
 
 
 async def main():

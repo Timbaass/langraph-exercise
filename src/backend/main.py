@@ -3,6 +3,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
+from langfuse import Langfuse, get_client
+from langfuse.langchain import CallbackHandler
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 
 from pydantic import BaseModel
@@ -11,7 +13,7 @@ from app_agents.runner import run_graph
 
 from config import get_settings
 
-from app_agents.app import build_graph
+from app_agents.graph import build_graph
 
 
 @asynccontextmanager
@@ -24,6 +26,13 @@ async def lifespan(app: FastAPI):
     print("Starting up the FastAPI application...")
 
     settings = get_settings()
+    
+    Langfuse(
+        public_key=settings.LANGFUSE_PUBLIC_KEY,
+        secret_key=settings.LANGFUSE_SECRET_KEY,
+        host=settings.LANGFUSE_BASE_URL,
+    )
+    app.state.langfuse_handler = CallbackHandler()
 
     async with AsyncPostgresSaver.from_conn_string(
         settings.POSTGRES_DB_URI
@@ -37,10 +46,9 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             print(f"Error during application startup: {e}")
             raise
-
         yield
     # Initialize resources here (e.g., database connections)
-    
+    get_client().flush()
     # Clean up resources here (e.g., close database connections)
     print("Shutting down the FastAPI application...")
 
@@ -63,8 +71,9 @@ async def root():
     try:
         result = await run_graph(
             session_thread_id="conversation-1",
-            query="Hello, can you remind me where do i want to go in last chat?",
+            query="Hello, ı wanna fly to istanbul from malatya in 26.08.2026?",
             graph=app.state.graph,
+            callback_handler=app.state.langfuse_handler
         )
         return JSONResponse(content={"response": result})
     except Exception as e:

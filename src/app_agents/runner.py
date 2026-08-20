@@ -50,5 +50,10 @@ async def stream_graph(
         if metadata.get("langgraph_node") not in FINAL_RESPONSE_NODES:
             continue
 
+        if getattr(message, "tool_calls", None) or getattr(
+            message, "tool_call_chunks", None
+        ):
+            continue
+
         if isinstance(message.content, str) and message.content:
             yield message.content

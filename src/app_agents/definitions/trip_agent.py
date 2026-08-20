@@ -1,15 +1,19 @@
 from langchain.agents import create_agent
-from langchain_groq import ChatGroq
 
 from app_agents.tools.weather_tool import get_weather
 
 from config import get_settings
+from langchain_openai import ChatOpenAI
 
 
 def create_trip_agent():
     """Creates a trip agent."""
 
-    model = ChatGroq(model="openai/gpt-oss-120b", api_key=get_settings().GROQ_API_KEY)
+    model = ChatOpenAI(
+        model="Qwen/Qwen3.5-122B",
+        base_url=get_settings().LITELLM_BASE_URL,
+        api_key=get_settings().LITELLM_API_KEY,
+    )
 
     trip_agent = create_agent(
         model=model,

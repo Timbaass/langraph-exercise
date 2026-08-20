@@ -19,12 +19,10 @@ async def supervisor_node(state: TripState):
         SystemMessage(
             content="You are a silent routing supervisor. You must NOT respond to the user. "
             "Your ONLY job is to analyze the conversation and route the request to the correct agent. "
-            "Route to 'trip' for trip planning/weather, 'flight' for flight booking/searching, or 'clarify' if ambiguous."
+            "Route to 'trip' for trip planning/weather, 'flight' for flight booking/searching, or 'clarify' if ambiguous. "
+            "Call the RoutingDecision tool to select 'flight', 'trip', or 'clarify'."
         ),
         *state["messages"],
-        SystemMessage(
-            content="Do not respond to the user. Call the RoutingDecision tool to select 'flight', 'trip', or 'clarify'."
-        )
     ])
 
     if result.decision == "trip":

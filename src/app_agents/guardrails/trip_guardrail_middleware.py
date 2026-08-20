@@ -1,9 +1,8 @@
 from langchain.agents.middleware import AgentMiddleware, AgentState, hook_config
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
-from langchain_groq import ChatGroq
-
 from config import get_settings
+from langchain_openai import ChatOpenAI
 
 
 class TripGuardrailMiddleware(AgentMiddleware):
@@ -12,8 +11,10 @@ class TripGuardrailMiddleware(AgentMiddleware):
         super().__init__()
 
         self.settings = get_settings()
-        self.control_model = ChatGroq(
-            model="openai/gpt-oss-20b", api_key=self.settings.GROQ_API_KEY
+        self.control_model = ChatOpenAI(
+            model="Qwen/Qwen3.5-122B",
+            base_url=get_settings().LITELLM_BASE_URL,
+            api_key=get_settings().LITELLM_API_KEY,
         )
 
     @hook_config(can_jump_to=["end"])

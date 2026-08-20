@@ -3,18 +3,17 @@ from langchain.agents import create_agent
 from app_agents.tools.flight_tool import create_flight_search_tool
 from app_agents.mcp_tools.EnuygunMCP import EnuygunMCP
 
-from config import get_settings
-from langchain_openai import ChatOpenAI
+from config import GROQ_MODEL, get_settings
+from langchain_groq import ChatGroq
 
 
 def create_flight_agent():
     """Creates a flight agent with the given model."""
 
     mcp = EnuygunMCP()
-    model = ChatOpenAI(
-        model="Qwen/Qwen3.5-122B",
-        base_url=get_settings().LITELLM_BASE_URL,
-        api_key=get_settings().LITELLM_API_KEY,
+    model = ChatGroq(
+        model=GROQ_MODEL,
+        api_key=get_settings().GROQ_API_KEY,
     )
 
     search_flight = create_flight_search_tool(mcp=mcp)

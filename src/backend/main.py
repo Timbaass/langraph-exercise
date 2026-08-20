@@ -1,7 +1,8 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, StreamingResponse
 
 from langfuse import Langfuse, get_client
 from langfuse.langchain import CallbackHandler
@@ -9,7 +10,7 @@ from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 
 from pydantic import BaseModel
 
-from app_agents.runner import run_graph
+from app_agents.runner import stream_graph
 
 from config import get_settings
 
@@ -60,21 +61,38 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3001",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 class GraphRequest(BaseModel):
     session_thread_id: str
     query: str
 
 
-@app.get("/chat")
-async def root():
+@app.post("/chat")
+async def chat(request: GraphRequest):
     try:
-        result = await run_graph(
-            session_thread_id="conversation-1",
-            query="Hello, ı wanna fly to istanbul from malatya in 26.08.2026?",
+        response_stream = stream_graph(
+            session_thread_id=request.session_thread_id,
+            query=request.query,
             graph=app.state.graph,
-            callback_handler=app.state.langfuse_handler
+            callback_handler=app.state.langfuse_handler,
         )
-        return JSONResponse(content={"response": result})
+        return StreamingResponse(
+            response_stream,
+            media_type="text/plain; charset=utf-8",
+            headers={"Cache-Control": "no-cache"},
+        )
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)

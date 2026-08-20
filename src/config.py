@@ -12,7 +12,7 @@ ROUTING_MODEL = "openai/gpt-oss-20b"
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
-
+    
     GROQ_API_KEY: str
     POSTGRES_DB_URI: str
     ENUYGUN_MCP_URL: str

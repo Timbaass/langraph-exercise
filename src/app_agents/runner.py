@@ -15,7 +15,12 @@ def create_graph_config(session_thread_id: str, callback_handler: CallbackHandle
     }
 
 
-async def run_graph(session_thread_id: str, query: str, graph: StateGraph, callback_handler: CallbackHandler):
+async def run_graph(
+    session_thread_id: str,
+    query: str,
+    graph: StateGraph,
+    callback_handler: CallbackHandler,
+):
     """
     Run the LangGraph state graph with the given query and session thread ID.
     """

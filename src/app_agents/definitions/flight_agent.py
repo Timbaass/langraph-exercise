@@ -3,18 +3,14 @@ from langchain.agents import create_agent
 from app_agents.tools.flight_tool import create_flight_search_tool
 from app_agents.mcp_tools.EnuygunMCP import EnuygunMCP
 
-from config import GROQ_MODEL, get_settings
-from langchain_groq import ChatGroq
+from config import create_qwen_llm
 
 
 def create_flight_agent():
     """Creates a flight agent with the given model."""
 
     mcp = EnuygunMCP()
-    model = ChatGroq(
-        model=GROQ_MODEL,
-        api_key=get_settings().GROQ_API_KEY,
-    )
+    model = create_qwen_llm()
 
     search_flight = create_flight_search_tool(mcp=mcp)
 

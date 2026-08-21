@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import JSONResponse
 
 from langfuse import Langfuse, get_client
 from langfuse.langchain import CallbackHandler
@@ -10,7 +10,7 @@ from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 
 from pydantic import BaseModel
 
-from app_agents.runner import stream_graph
+from app_agents.runner import run_graph
 
 from config import get_settings
 
@@ -27,7 +27,7 @@ async def lifespan(app: FastAPI):
     print("Starting up the FastAPI application...")
 
     settings = get_settings()
-    
+
     Langfuse(
         public_key=settings.LANGFUSE_PUBLIC_KEY,
         secret_key=settings.LANGFUSE_SECRET_KEY,
@@ -68,7 +68,7 @@ app.add_middleware(
         "http://127.0.0.1:3000",
         "http://localhost:3001",
         "http://127.0.0.1:3001",
-        "https://chatbot-qnbv.vercel.app/"
+        "https://chatbot-qnbv.vercel.app/",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -84,16 +84,12 @@ class GraphRequest(BaseModel):
 @app.post("/chat")
 async def chat(request: GraphRequest):
     try:
-        response_stream = stream_graph(
+        final_output = await run_graph(
             session_thread_id=request.session_thread_id,
             query=request.query,
             graph=app.state.graph,
             callback_handler=app.state.langfuse_handler,
         )
-        return StreamingResponse(
-            response_stream,
-            media_type="text/plain; charset=utf-8",
-            headers={"Cache-Control": "no-cache"},
-        )
+        return JSONResponse(content={"response": final_output})
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)

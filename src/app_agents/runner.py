@@ -31,29 +31,3 @@ async def run_graph(
 
     final_output = result["messages"][-1].content
     return final_output
-
-
-async def stream_graph(
-    session_thread_id: str,
-    query: str,
-    graph: StateGraph,
-    callback_handler: CallbackHandler,
-):
-    """Yield text chunks from the final user-facing agent in the graph."""
-    config = create_graph_config(session_thread_id, callback_handler)
-
-    async for message, metadata in graph.astream(
-        {"messages": [{"role": "user", "content": query}]},
-        config=config,
-        stream_mode="messages",
-    ):
-        if metadata.get("langgraph_node") not in FINAL_RESPONSE_NODES:
-            continue
-
-        if getattr(message, "tool_calls", None) or getattr(
-            message, "tool_call_chunks", None
-        ):
-            continue
-
-        if isinstance(message.content, str) and message.content:
-            yield message.content

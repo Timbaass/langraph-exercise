@@ -2,17 +2,13 @@ from langchain.agents import create_agent
 
 from app_agents.tools.weather_tool import get_weather
 
-from config import GROQ_MODEL, get_settings
-from langchain_groq import ChatGroq
+from config import create_qwen_llm
 
 
 def create_trip_agent():
     """Creates a trip agent."""
 
-    model = ChatGroq(
-        model=GROQ_MODEL,
-        api_key=get_settings().GROQ_API_KEY,
-    )
+    model = create_qwen_llm()
 
     trip_agent = create_agent(
         model=model,

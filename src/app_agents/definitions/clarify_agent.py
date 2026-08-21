@@ -1,15 +1,11 @@
-from config import get_settings, GROQ_MODEL
+from config import create_qwen_llm
 from langchain.agents import create_agent
-from langchain_groq import ChatGroq
 
 
 def create_clarify_agent():
     """Creates a clarify agent with the given model."""
 
-    model = ChatGroq(
-        model=GROQ_MODEL,
-        api_key=get_settings().GROQ_API_KEY,
-    )
+    model = create_qwen_llm()
 
     return create_agent(
         model=model,
